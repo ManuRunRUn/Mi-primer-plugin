@@ -6,14 +6,22 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Instalacion Windows-Only
+      - name: Forzar Instalacion de Librerias
         run: |
+          # 1. Limpiar rastro de instalaciones fallidas
           rm -rf /var/lib/pacman/sync/*
+          # 2. Forzar actualizacion de bases de datos
           dkp-pacman -Syy --noconfirm
-          # Sobreescribimos cualquier archivo que cause conflicto
-          dkp-pacman -S --noconfirm --needed --overwrite '*' wiiu-dev wut wiiu-pkg-dev aroma-libs wups-dev
-      - name: Compilar
+          # 3. Instalacion forzada sobreescribiendo conflictos (Arregla los 3 errores de tu foto)
+          dkp-pacman -S --noconfirm --needed --overwrite '*' \
+            wiiu-dev \
+            wut \
+            wiiu-pkg-dev \
+            aroma-libs \
+            wups-dev
+      - name: Compilar Plugin
         run: |
+          # Configurar rutas para que encuentre wups-tool
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
           make
       - name: Subir Plugin
