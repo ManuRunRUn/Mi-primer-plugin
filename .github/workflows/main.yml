@@ -6,13 +6,11 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Limpieza Radical
+      - name: Instalacion Windows-Only
         run: |
-          # Limpiar carpetas temporales de descargas fallidas
           rm -rf /var/lib/pacman/sync/*
-          # Actualizar base de datos
           dkp-pacman -Syy --noconfirm
-          # INSTALACIÓN FORZADA (Esto ignora el error de Wii pkg device)
+          # Sobreescribimos cualquier archivo que cause conflicto
           dkp-pacman -S --noconfirm --needed --overwrite '*' wiiu-dev wut wiiu-pkg-dev aroma-libs wups-dev
       - name: Compilar
         run: |
