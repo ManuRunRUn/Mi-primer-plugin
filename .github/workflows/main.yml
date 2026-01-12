@@ -8,14 +8,28 @@ jobs:
     steps:
       - name: Obtener codigo
         uses: actions/checkout@v4
-      
-      - name: Instalar lo necesario
+
+      - name: Instalar base oficial
         run: |
-          # Actualizamos e instalamos solo lo que pide tu Makefile
           dkp-pacman -Sy
-          dkp-pacman -S wiiu-dev wps-dev --noconfirm
+          # Instalamos solo lo basico oficial (wut viene aqui)
+          dkp-pacman -S wiiu-dev --noconfirm
+
+      - name: Instalar WUPS (Truco Magico)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 1. Usamos la herramienta de GitHub (gh) para bajar la libreria WUPS real
+          # Esto evita el error "Target Not Found" y los 404
+          gh release download --repo wiiu-env/WiiUPluginSystem --pattern "*_any.pkg.tar.xz" --dir /tmp
           
-      - name: Compilar
+          # 2. Descomprimimos "a la fuerza" en el sistema
+          tar -xf /tmp/*_any.pkg.tar.xz -C /
+          
+          # 3. Verificamos que se instalo
+          ls -l /opt/devkitpro/portlibs/wiiu/include/wups.h
+
+      - name: Compilar Plugin
         run: |
           export DEVKITPRO=/opt/devkitpro
           export DEVKITPPC=$DEVKITPRO/devkitPPC
@@ -23,8 +37,8 @@ jobs:
           export PATH=$PATH:$DEVKITPPC/bin:$DEVKITPRO/tools/bin
           
           make
-          
-      - name: Descargar Plugin
+
+      - name: Descargar Archivo Final
         uses: actions/upload-artifact@v4
         with:
           name: XtremeStreamer_Listo
