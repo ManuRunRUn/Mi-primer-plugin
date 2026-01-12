@@ -3,37 +3,17 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkitppc:latest
+    # Cambiamos a una imagen que ya tiene TODO pre-configurado
+    container: ghcr.io/wiiu-env/core-docker:master
     steps:
       - uses: actions/checkout@v4
-      - name: Descarga desde Servidores Alternativos
+      - name: Compilar Directamente
         run: |
-          # 1. Crear carpetas si no existen
-          mkdir -p libs && cd libs
-          
-          # 2. Descargar librerías directamente de los repositorios de GitHub/Aroma
-          # Usamos espejos para evitar el error 403
-          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
-          wget https://github.com/wiiu-env/wups/releases/download/v0.5.0/wups-dev-0.5.0-1-any.pkg.tar.xz
-          
-          # 3. Descomprimir manualmente en la raíz de devkitPro
-          # Esto salta el error de "Select default" y "device error"
-          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C /opt/devkitpro
-          tar -xJf wups-dev-0.5.0-1-any.pkg.tar.xz -C /opt/devkitpro
-          
-          # 4. Descargar la herramienta de conversión (wups-tool)
-          wget https://github.com/wiiu-env/wups/releases/download/v0.5.0/wups-tool-linux.tar.gz
-          tar -xzf wups-tool-linux.tar.gz
-          cp wups-tool /opt/devkitpro/tools/bin/
-          
-      - name: Compilar XtremeStreamer
-        run: |
-          export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
-          export WUT_ROOT=/opt/devkitpro/wut
+          # En este contenedor las rutas ya estan listas
+          # Solo ejecutamos el comando de compilacion
           make
-          
       - name: Entrega de Plugin
         uses: actions/upload-artifact@v4
         with:
-          name: Plugin_WiiU_Final
+          name: Plugin_WiiU_Listo
           path: "*.wps"
