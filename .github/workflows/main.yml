@@ -9,27 +9,35 @@ jobs:
       - name: Obtener codigo
         uses: actions/checkout@v4
 
-      - name: Instalar Todo Manualmente
+      - name: Instalar Herramientas Base
         run: |
-          # 1. Actualizar e instalar la base de Wii U
-          dkp-pacman -Sy
-          dkp-pacman -S wiiu-dev --noconfirm
+          # Instalamos wget desde el sistema operativo, no desde pacman
+          apt-get update
+          apt-get install -y wget xz-utils
 
-          # 2. Descargar WUPS usando CURL (que si funciona en el servidor)
-          curl -L -o wups.tar.xz https://github.com/wiiu-env/WiiUPluginSystem/releases/download/v0.10.1/wups-0.10.1-1-any.pkg.tar.xz
-          curl -L -o wups-tool.tar.gz https://github.com/wiiu-env/WiiUPluginSystem/releases/download/v0.10.1/wups-tool-linux.tar.gz
-
-          # 3. Instalar la librería en las carpetas del sistema
-          tar -xJf wups.tar.xz -C /
+      - name: Preparar Librerias de Wii U
+        run: |
+          # 1. Bajamos wut (la base de Wii U)
+          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
           
-          # 4. Instalar la herramienta que crea el .wps
-          tar -xzf wups-tool.tar.gz
-          chmod +x wups-tool
-          cp wups-tool /opt/devkitpro/tools/bin/
+          # 2. Bajamos WUPS (el sistema de plugins de Aroma)
+          wget https://github.com/wiiu-env/WiiUPluginSystem/releases/download/v0.10.1/wups-0.10.1-1-any.pkg.tar.xz
+          
+          # 3. Bajamos la herramienta para crear el .wps
+          wget https://github.com/wiiu-env/WiiUPluginSystem/releases/download/v0.10.1/wups-tool-linux.tar.gz
+
+          # 4. Instalamos todo en las carpetas de devkitPro
+          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C /
+          tar -xJf wups-0.10.1-1-any.pkg.tar.xz -C /
+          tar -xzf wups-tool-linux.tar.gz
+          
+          # Movemos la herramienta a donde el Makefile pueda verla
+          mv wups-tool /opt/devkitpro/tools/bin/
+          chmod +x /opt/devkitpro/tools/bin/wups-tool
 
       - name: Compilar Plugin
         run: |
-          # Definimos las rutas exactas
+          # Configuramos las rutas de compilacion
           export DEVKITPRO=/opt/devkitpro
           export DEVKITPPC=$DEVKITPRO/devkitPPC
           export WUT_ROOT=$DEVKITPRO/wut
@@ -38,7 +46,7 @@ jobs:
           # Ejecutamos tu Makefile
           make
 
-      - name: Descargar Plugin Final
+      - name: Subir Plugin Final
         uses: actions/upload-artifact@v4
         with:
           name: XtremeStreamer_WiiU
