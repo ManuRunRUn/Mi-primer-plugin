@@ -6,21 +6,28 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bypass de Servidores y Compilacion
+      - name: Descarga Directa de Librerias
         run: |
-          # 1. Ignorar errores de bases de datos que salen en tus fotos
-          echo "Siguiendo con la instalacion a pesar de fallos de red..."
-          
-          # 2. Configurar el repositorio para que no pida confirmacion de llaves
+          # 1. Forzar la instalacion de lo básico
           dkp-pacman -Sy --noconfirm || true
           
-          # 3. Intentar instalar solo lo vital. Si falla, el Makefile usara lo que ya tiene el contenedor
-          dkp-pacman -S --noconfirm --needed --overwrite '*' wut wiiu-pkg-dev aroma-libs wups-dev || echo "Usando libs preinstaladas"
+          # 2. Descargar e instalar manualmente las 3 librerías que fallan en tus fotos
+          # Esto evita el error "target not found"
+          wget https://pkg.devkitpro.org/packages/wiiu-pkg-dev-1.1.2-1-any.pkg.tar.xz
+          wget https://pkg.devkitpro.org/packages/aroma-libs-1.0.0-1-any.pkg.tar.xz
+          wget https://pkg.devkitpro.org/packages/wups-dev-0.5.0-1-any.pkg.tar.xz
           
-          # 4. Compilar con rutas forzadas
+          # Instalación local forzada
+          dkp-pacman -U --noconfirm *.pkg.tar.xz || true
+          
+          # 3. Limpiar rastro de fallos anteriores
+          rm -rf /opt/devkitpro/wut
+          dkp-pacman -S --noconfirm --needed --overwrite '*' wut
+      - name: Compilar Plugin
+        run: |
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
           make
-      - name: Descargar Plugin
+      - name: Subir Plugin
         uses: actions/upload-artifact@v4
         with:
           name: XtremeStreamer_WiiU
