@@ -9,26 +9,28 @@ jobs:
       - name: Obtener codigo
         uses: actions/checkout@v4
 
-      - name: Instalar Herramientas de Wii U
+      - name: Instalar Herramientas de Wii U (CORREGIDO)
         run: |
-          # 1. Actualizamos el gestor oficial para que no de error 404
-          dkp-pacman -Sy
-          # 2. Instalamos la base y el sistema de plugins (WUPS)
-          dkp-pacman -S wiiu-dev wiiu-wups-dev --noconfirm
+          # 1. Forzar la actualización de las llaves y la base de datos
+          # Esto evita que el comando "no funcione" o de error de base de datos
+          sudo dkp-pacman -Syy
+          
+          # 2. Instalar la base de Wii U y el sistema de plugins
+          # Usamos --needed para que no falle si algo ya medio existe
+          sudo dkp-pacman -S wiiu-dev wiiu-wups-dev --noconfirm --needed
 
       - name: Compilar Plugin
         run: |
-          # Definimos las rutas para que encuentre el archivo wups.h
+          # Definimos las rutas exactas
           export DEVKITPRO=/opt/devkitpro
           export WUT_ROOT=$DEVKITPRO/wut
           export PATH=$PATH:$DEVKITPRO/devkitPPC/bin:$DEVKITPRO/tools/bin
 
-          # Ejecutamos el Makefile que tienes en tu proyecto
+          # Ejecutamos el Makefile
           make
 
-      - name: Descargar Archivo .wps
+      - name: Descargar Archivo Final
         uses: actions/upload-artifact@v4
         with:
-          name: Plugin_WiiU_XtremeStreamer
+          name: XtremeStreamer_WiiU
           path: "*.wps"
-          
