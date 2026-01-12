@@ -9,25 +9,25 @@ jobs:
       - name: Obtener codigo
         uses: actions/checkout@v4
       
-      - name: Instalar dependencias oficiales
+      - name: Preparar Herramientas (Solucion 404)
         run: |
-          # Esto actualiza e instala todo sin usar wget
+          # Instalamos las librerias oficiales directamente
           dkp-pacman -Sy
           dkp-pacman -S wiiu-dev wiiu-wups --noconfirm
           
-      - name: Compilar Plugin
+      - name: Compilar para Windows/WiiU
         run: |
-          # Configuramos las rutas del sistema
+          # Definimos las rutas para que el Makefile encuentre todo
           export DEVKITPRO=/opt/devkitpro
           export DEVKITPPC=$DEVKITPRO/devkitPPC
           export WUT_ROOT=$DEVKITPRO/wut
           export PATH=$PATH:$DEVKITPPC/bin:$DEVKITPRO/tools/bin
           
-          # Compilamos usando tu Makefile
+          # Ejecuta tu Makefile para crear el .wps
           make
           
-      - name: Guardar el archivo .wps
+      - name: Descargar Plugin Final
         uses: actions/upload-artifact@v4
         with:
-          name: Plugin_Final_WiiU
+          name: XtremeStreamer_Windows_Ready
           path: "*.wps"
