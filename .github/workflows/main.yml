@@ -7,30 +7,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Tomar Librerias de Proyectos Existentes
+      - name: Extraer Entorno de Otros Plugins
         run: |
-          # 1. Traemos WUT (Base de Wii U) de un release estable
+          # 1. Traer librerias base (WUT) de un repositorio espejo
           wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
           tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C /
           
-          # 2. Traemos las herramientas de Aroma (WUPS) de un release que ya funciona
+          # 2. Traer el sistema de Plugins (WUPS) ya compilado
           wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-0.5.1-1-any.pkg.tar.xz
           tar -xJf wups-0.5.1-1-any.pkg.tar.xz -C /
           
-          # 3. Traemos el wups-tool (El que convierte a .wps) directamente
+          # 3. Traer la herramienta de conversion (wups-tool)
           wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-tool-linux.tar.gz
           tar -xzf wups-tool-linux.tar.gz
           chmod +x wups-tool
           cp wups-tool /opt/devkitpro/tools/bin/
 
-      - name: Compilar XtremeStreamer
+      - name: Generar Plugin WPS
         run: |
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
           export WUT_ROOT=/opt/devkitpro/wut
-          # Usamos el compilador de Wii U para unir todo
           make
           
-      - name: Obtener Plugin Terminado
+      - name: Descargar Plugin Terminado
         uses: actions/upload-artifact@v4
         with:
           name: XtremeStreamer_WiiU
