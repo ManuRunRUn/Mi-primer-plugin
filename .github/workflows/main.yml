@@ -6,17 +6,17 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Instalar herramientas
+      - name: Instalar herramientas de Wii U
         run: |
-          /opt/devkitpro/pacman/bin/dkp-pacman -Syyu --noconfirm wiiu-dev wut wiiu-pkg-dev aroma-libs
-      - name: Compilar plugin
+          dkp-pacman -Syyu --noconfirm wiiu-dev wut wiiu-pkg-dev aroma-libs wups-dev
+      - name: Compilar
+        shell: bash
         run: |
-          export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
+          source /etc/profile.d/devkitpro.sh
           make
-      - name: Subir resultado
+      - name: Guardar Plugin
         uses: actions/upload-artifact@v4
         with:
-          name: MiPlugin
+          name: XtremeStreamer
           path: |
             *.wps
-            *.elf
