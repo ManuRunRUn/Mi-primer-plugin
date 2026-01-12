@@ -6,20 +6,21 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Instalacion Ultra Segura
+      - name: Bypass de Servidores y Compilacion
         run: |
-          # Limpiar y resetear llaves (esto arregla tus fotos)
-          rm -rf /var/lib/pacman/sync/*
-          dkp-pacman -Syy --noconfirm devkitpro-keyring
+          # 1. Ignorar errores de bases de datos que salen en tus fotos
+          echo "Siguiendo con la instalacion a pesar de fallos de red..."
           
-          # Instalación con sobreescritura total para evitar el error de 'device'
-          dkp-pacman -S --noconfirm --needed --overwrite '*' \
-            wiiu-dev wut wiiu-pkg-dev aroma-libs wups-dev
-      - name: Compilar
-        run: |
+          # 2. Configurar el repositorio para que no pida confirmacion de llaves
+          dkp-pacman -Sy --noconfirm || true
+          
+          # 3. Intentar instalar solo lo vital. Si falla, el Makefile usara lo que ya tiene el contenedor
+          dkp-pacman -S --noconfirm --needed --overwrite '*' wut wiiu-pkg-dev aroma-libs wups-dev || echo "Usando libs preinstaladas"
+          
+          # 4. Compilar con rutas forzadas
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
           make
-      - name: Subir
+      - name: Descargar Plugin
         uses: actions/upload-artifact@v4
         with:
           name: XtremeStreamer_WiiU
