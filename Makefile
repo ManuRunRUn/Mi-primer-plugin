@@ -2,11 +2,8 @@ TARGET := XtremeStreamer
 OBJS := main.o
 LIBS := -lwut -lwups -lgx2 -lcoreinit -lnsysnet
 
-include $(DEVKITPPC)/base_tools
+# Usamos rutas relativas para que GitHub no se pierda
 include $(WUT_ROOT)/share/wut_rules
-
-CFLAGS += -O3 -Wall
-CXXFLAGS += -O3 -Wall
 
 all: $(TARGET).wps
 
