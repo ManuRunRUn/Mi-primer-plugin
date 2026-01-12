@@ -6,32 +6,32 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extraer Herramientas de Aroma
+      
+      - name: Tomar Librerias de Proyectos Existentes
         run: |
-          # Descargamos el conversor wups-tool directamente desde el repositorio oficial de lanzamientos
-          wget https://github.com/wiiu-env/wups/releases/download/v0.5.0/wups-tool-linux.tar.gz
+          # 1. Traemos WUT (Base de Wii U) de un release estable
+          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
+          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C /
+          
+          # 2. Traemos las herramientas de Aroma (WUPS) de un release que ya funciona
+          wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-0.5.1-1-any.pkg.tar.xz
+          tar -xJf wups-0.5.1-1-any.pkg.tar.xz -C /
+          
+          # 3. Traemos el wups-tool (El que convierte a .wps) directamente
+          wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-tool-linux.tar.gz
           tar -xzf wups-tool-linux.tar.gz
           chmod +x wups-tool
-          
-          # Descargamos las cabeceras necesarias (wut)
-          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
-          mkdir -p wut_extra
-          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C wut_extra
-          # Las movemos a donde el compilador las vea
-          cp -r wut_extra/opt/devkitpro/wut /opt/devkitpro/
+          cp wups-tool /opt/devkitpro/tools/bin/
 
       - name: Compilar XtremeStreamer
         run: |
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
-          # Compilación directa ignorando el Makefile que daba errores
-          powerpc-eabi-gcc -O2 -mcpu=750 -meabi -mhard-float main.cpp -o plugin.elf \
-            -I/opt/devkitpro/wut/include -L/opt/devkitpro/wut/lib -lwut -lnsysnet
+          export WUT_ROOT=/opt/devkitpro/wut
+          # Usamos el compilador de Wii U para unir todo
+          make
           
-          # Convertir al formato final de Wii U
-          ./wups-tool plugin.elf XtremeStreamer.wps
-          
-      - name: Descargar Plugin
+      - name: Obtener Plugin Terminado
         uses: actions/upload-artifact@v4
         with:
-          name: XtremeStreamer_Final
+          name: XtremeStreamer_WiiU
           path: "*.wps"
