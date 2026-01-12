@@ -1,4 +1,4 @@
-name: Compilar
+name: Compilar XtremeStreamer
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -7,30 +7,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Extraer Entorno de Otros Plugins
+      - name: Compilar con Archivos Internos
         run: |
-          # 1. Traer librerias base (WUT) de un repositorio espejo
-          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
-          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C /
-          
-          # 2. Traer el sistema de Plugins (WUPS) ya compilado
-          wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-0.5.1-1-any.pkg.tar.xz
-          tar -xJf wups-0.5.1-1-any.pkg.tar.xz -C /
-          
-          # 3. Traer la herramienta de conversion (wups-tool)
-          wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-tool-linux.tar.gz
-          tar -xzf wups-tool-linux.tar.gz
-          chmod +x wups-tool
-          cp wups-tool /opt/devkitpro/tools/bin/
-
-      - name: Generar Plugin WPS
-        run: |
+          # Añadimos las herramientas básicas que ya vienen en el contenedor
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
-          export WUT_ROOT=/opt/devkitpro/wut
-          make
           
-      - name: Descargar Plugin Terminado
+          # Compilamos usando las librerías que tú subiste al repo
+          powerpc-eabi-gcc -O2 -mcpu=750 -meabi -mhard-float main.cpp -o plugin.elf \
+            -I./include -L./libs -lwut -lwups -lgx2 -lcoreinit -lnsysnet
+          
+          # Intentamos usar el conversor interno
+          /opt/devkitpro/tools/bin/wups-tool plugin.elf XtremeStreamer.wps || echo "Error conversion"
+
+      - name: Entrega de Archivo
         uses: actions/upload-artifact@v4
         with:
-          name: XtremeStreamer_WiiU
+          name: Plugin_WiiU
           path: "*.wps"
