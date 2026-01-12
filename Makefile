@@ -1,18 +1,14 @@
-# Nombre del plugin
 TARGET := XtremeStreamer
 OBJS := main.o
-LIBS := -lwups -lgx2 -lcoreinit
+LIBS := -lwut -lwups -lgx2 -lcoreinit -lnsysnet
 
-# Carpetas de herramientas oficiales
-include $(DEVKITPRO)/wut/share/wut.mk
-include $(DEVKITPRO)/wups/share/wups.mk
+include $(DEVKITPPC)/base_tools
+include $(WUT_ROOT)/share/wut_rules
 
-# Ajustes de compilación
 CFLAGS += -O3 -Wall
 CXXFLAGS += -O3 -Wall
 
 all: $(TARGET).wps
 
-# Regla para crear el archivo final de Wii U
 %.wps: %.elf
-	$(WUPS_TOOL) $< $@
+	wups-tool $< $@
