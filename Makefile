@@ -1,19 +1,18 @@
-# Nombre del archivo de salida (.wps)
+# Nombre del plugin
 TARGET := XtremeStreamer
+OBJS := main.o
+LIBS := -lwups -lgx2 -lcoreinit
 
-# Directorios de herramientas
-WUT_ROOT := $(DEVKITPRO)/wut
-WUPS_ROOT := $(DEVKITPRO)/wups
+# Carpetas de herramientas oficiales
+include $(DEVKITPRO)/wut/share/wut.mk
+include $(DEVKITPRO)/wups/share/wups.mk
 
-# Reglas de WUPS (Aroma)
-include $(WUPS_ROOT)/wups_rules
-
-# Librerías necesarias para que funcione la red y el video
-LIBS := -lwups -lgx2 -lcoreinit -lnetwork -lnsysnet
-
-# Optimización para máxima fluidez
+# Ajustes de compilación
 CFLAGS += -O3 -Wall
 CXXFLAGS += -O3 -Wall
 
-# Reglas finales de compilación
-include $(DEVKITPRO)/devkitPPC/base_rules
+all: $(TARGET).wps
+
+# Regla para crear el archivo final de Wii U
+%.wps: %.elf
+	$(WUPS_TOOL) $< $@
