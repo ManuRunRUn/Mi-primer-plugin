@@ -6,13 +6,14 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Limpiar y Descargar
+      - name: Instalacion Forzada
         run: |
-          # Esto arregla el error de tu foto
+          # Limpiamos todo rastro de errores anteriores
           rm -rf /var/lib/pacman/sync/*
           dkp-pacman -Syy --noconfirm
-          dkp-pacman -S --noconfirm wiiu-dev wut wiiu-pkg-dev aroma-libs wups-dev
-      - name: Compilar para Windows
+          # El --ask 4 selecciona automáticamente Aroma para evitar el error que mencionas
+          echo -e "4\ny\n" | dkp-pacman -S --noconfirm wiiu-dev wut wiiu-pkg-dev aroma-libs wups-dev
+      - name: Compilar
         run: |
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
           make
