@@ -6,29 +6,34 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Descarga Directa de Librerias
+      - name: Descarga desde Servidores Alternativos
         run: |
-          # 1. Forzar la instalacion de lo básico
-          dkp-pacman -Sy --noconfirm || true
+          # 1. Crear carpetas si no existen
+          mkdir -p libs && cd libs
           
-          # 2. Descargar e instalar manualmente las 3 librerías que fallan en tus fotos
-          # Esto evita el error "target not found"
-          wget https://pkg.devkitpro.org/packages/wiiu-pkg-dev-1.1.2-1-any.pkg.tar.xz
-          wget https://pkg.devkitpro.org/packages/aroma-libs-1.0.0-1-any.pkg.tar.xz
-          wget https://pkg.devkitpro.org/packages/wups-dev-0.5.0-1-any.pkg.tar.xz
+          # 2. Descargar librerías directamente de los repositorios de GitHub/Aroma
+          # Usamos espejos para evitar el error 403
+          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
+          wget https://github.com/wiiu-env/wups/releases/download/v0.5.0/wups-dev-0.5.0-1-any.pkg.tar.xz
           
-          # Instalación local forzada
-          dkp-pacman -U --noconfirm *.pkg.tar.xz || true
+          # 3. Descomprimir manualmente en la raíz de devkitPro
+          # Esto salta el error de "Select default" y "device error"
+          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C /opt/devkitpro
+          tar -xJf wups-dev-0.5.0-1-any.pkg.tar.xz -C /opt/devkitpro
           
-          # 3. Limpiar rastro de fallos anteriores
-          rm -rf /opt/devkitpro/wut
-          dkp-pacman -S --noconfirm --needed --overwrite '*' wut
-      - name: Compilar Plugin
+          # 4. Descargar la herramienta de conversión (wups-tool)
+          wget https://github.com/wiiu-env/wups/releases/download/v0.5.0/wups-tool-linux.tar.gz
+          tar -xzf wups-tool-linux.tar.gz
+          cp wups-tool /opt/devkitpro/tools/bin/
+          
+      - name: Compilar XtremeStreamer
         run: |
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
+          export WUT_ROOT=/opt/devkitpro/wut
           make
-      - name: Subir Plugin
+          
+      - name: Entrega de Plugin
         uses: actions/upload-artifact@v4
         with:
-          name: XtremeStreamer_WiiU
+          name: Plugin_WiiU_Final
           path: "*.wps"
