@@ -6,13 +6,15 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Instalacion Forzada
+      - name: Limpieza y Reparacion
         run: |
-          # Limpiamos todo rastro de errores anteriores
+          # 1. Borrar bases de datos corruptas
           rm -rf /var/lib/pacman/sync/*
+          # 2. Forzar actualización de llaves de seguridad
           dkp-pacman -Syy --noconfirm
-          # El --ask 4 selecciona automáticamente Aroma para evitar el error que mencionas
-          echo -e "4\ny\n" | dkp-pacman -S --noconfirm wiiu-dev wut wiiu-pkg-dev aroma-libs wups-dev
+          # 3. Instalación limpia ignorando conflictos (Esto quita el error de la línea 35)
+          dkp-pacman -S --noconfirm --needed wiiu-dev wut wiiu-pkg-dev
+          echo -e "y\ny\n" | dkp-pacman -S --noconfirm aroma-libs wups-dev
       - name: Compilar
         run: |
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
