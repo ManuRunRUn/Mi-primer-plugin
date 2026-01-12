@@ -9,38 +9,37 @@ jobs:
       - name: Obtener codigo
         uses: actions/checkout@v4
 
-      - name: Instalar Dependencias (Fuerza Bruta)
+      - name: Instalar Todo Manualmente
         run: |
-          # 1. Actualizamos e instalamos wget (para poder descargar cosas)
+          # 1. Actualizar e instalar la base de Wii U
           dkp-pacman -Sy
-          dkp-pacman -S wiiu-dev wget --noconfirm
+          dkp-pacman -S wiiu-dev --noconfirm
 
-          # 2. Descargamos WUPS y WUPS-TOOL manualmente (Versión Aroma 0.10.1)
-          # Usamos estos enlaces fijos que NO dan error 404
-          wget https://github.com/wiiu-env/WiiUPluginSystem/releases/download/v0.10.1/wups-0.10.1-1-any.pkg.tar.xz
-          wget https://github.com/wiiu-env/WiiUPluginSystem/releases/download/v0.10.1/wups-tool-linux.tar.gz
+          # 2. Descargar WUPS usando CURL (que si funciona en el servidor)
+          curl -L -o wups.tar.xz https://github.com/wiiu-env/WiiUPluginSystem/releases/download/v0.10.1/wups-0.10.1-1-any.pkg.tar.xz
+          curl -L -o wups-tool.tar.gz https://github.com/wiiu-env/WiiUPluginSystem/releases/download/v0.10.1/wups-tool-linux.tar.gz
 
-          # 3. Instalamos WUPS a la fuerza
-          tar -xJf wups-0.10.1-1-any.pkg.tar.xz -C /
-
-          # 4. Instalamos WUPS-TOOL a la fuerza
-          tar -xzf wups-tool-linux.tar.gz
+          # 3. Instalar la librería en las carpetas del sistema
+          tar -xJf wups.tar.xz -C /
+          
+          # 4. Instalar la herramienta que crea el .wps
+          tar -xzf wups-tool.tar.gz
+          chmod +x wups-tool
           cp wups-tool /opt/devkitpro/tools/bin/
-          chmod +x /opt/devkitpro/tools/bin/wups-tool
 
       - name: Compilar Plugin
         run: |
-          # Configuramos el entorno
+          # Definimos las rutas exactas
           export DEVKITPRO=/opt/devkitpro
           export DEVKITPPC=$DEVKITPRO/devkitPPC
           export WUT_ROOT=$DEVKITPRO/wut
           export PATH=$PATH:$DEVKITPPC/bin:$DEVKITPRO/tools/bin
 
-          # Compilamos
+          # Ejecutamos tu Makefile
           make
 
-      - name: Descargar Archivo Final
+      - name: Descargar Plugin Final
         uses: actions/upload-artifact@v4
         with:
-          name: Plugin_XtremeStreamer_WiiU
+          name: XtremeStreamer_WiiU
           path: "*.wps"
