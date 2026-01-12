@@ -7,20 +7,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Compilar con Archivos Internos
+      - name: Extraer Dependencias de Aroma
         run: |
-          # Añadimos las herramientas básicas que ya vienen en el contenedor
-          export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
+          # 1. Bajamos los paquetes de librerías directamente desde los servidores de Aroma
+          # Usamos versiones específicas que sabemos que funcionan
+          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
+          wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-0.5.1-1-any.pkg.tar.xz
           
-          # Compilamos usando las librerías que tú subiste al repo
-          powerpc-eabi-gcc -O2 -mcpu=750 -meabi -mhard-float main.cpp -o plugin.elf \
-            -I./include -L./libs -lwut -lwups -lgx2 -lcoreinit -lnsysnet
+          # 2. Descomprimimos directamente en el sistema (Esto salta el error de tus fotos)
+          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C /
+          tar -xJf wups-0.5.1-1-any.pkg.tar.xz -C /
           
-          # Intentamos usar el conversor interno
-          /opt/devkitpro/tools/bin/wups-tool plugin.elf XtremeStreamer.wps || echo "Error conversion"
+          # 3. Bajamos el conversor (wups-tool) que usan todos los plugins
+          wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-tool-linux.tar.gz
+          tar -xzf wups-tool-linux.tar.gz
+          chmod +x wups-tool
+          cp wups-tool /opt/devkitpro/tools/bin/
 
-      - name: Entrega de Archivo
+      - name: Compilar
+        run: |
+          export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
+          export WUT_ROOT=/opt/devkitpro/wut
+          # Usamos el Makefile que es el estándar de SDCafiine
+          make
+          
+      - name: Subir Plugin (.wps)
         uses: actions/upload-artifact@v4
         with:
-          name: Plugin_WiiU
+          name: XtremeStreamer_WiiU
           path: "*.wps"
