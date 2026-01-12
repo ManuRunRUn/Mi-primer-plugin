@@ -1,23 +1,22 @@
-name: Compilador de Plugin
-on: [push] # Se activa cada vez que subes cambios
-
+name: Compilar
+on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
     container: devkitpro/devkitppc:latest
     steps:
-      - name: Descargar codigo
-        uses: actions/checkout@v4
-
-      - name: Instalar herramientas de Wii U
+      - uses: actions/checkout@v4
+      - name: Instalar herramientas
         run: |
-          dkp-pacman -Syyu --noconfirm wiiu-dev wut wiiu-pkg-dev aroma-libs
-
-      - name: Compilar Plugin
-        run: make
-
-      - name: Guardar el archivo .wps final
+          /opt/devkitpro/pacman/bin/dkp-pacman -Syyu --noconfirm wiiu-dev wut wiiu-pkg-dev aroma-libs
+      - name: Compilar plugin
+        run: |
+          export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
+          make
+      - name: Subir resultado
         uses: actions/upload-artifact@v4
         with:
-          name: Mi-Plugin-Listo
-          path: "*.wps"
+          name: MiPlugin
+          path: |
+            *.wps
+            *.elf
