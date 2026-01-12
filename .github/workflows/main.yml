@@ -6,26 +6,21 @@ jobs:
     container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Forzar Instalacion de Librerias
+      - name: Instalacion Ultra Segura
         run: |
-          # 1. Limpiar rastro de instalaciones fallidas
+          # Limpiar y resetear llaves (esto arregla tus fotos)
           rm -rf /var/lib/pacman/sync/*
-          # 2. Forzar actualizacion de bases de datos
-          dkp-pacman -Syy --noconfirm
-          # 3. Instalacion forzada sobreescribiendo conflictos (Arregla los 3 errores de tu foto)
+          dkp-pacman -Syy --noconfirm devkitpro-keyring
+          
+          # Instalación con sobreescritura total para evitar el error de 'device'
           dkp-pacman -S --noconfirm --needed --overwrite '*' \
-            wiiu-dev \
-            wut \
-            wiiu-pkg-dev \
-            aroma-libs \
-            wups-dev
-      - name: Compilar Plugin
+            wiiu-dev wut wiiu-pkg-dev aroma-libs wups-dev
+      - name: Compilar
         run: |
-          # Configurar rutas para que encuentre wups-tool
           export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
           make
-      - name: Subir Plugin
+      - name: Subir
         uses: actions/upload-artifact@v4
         with:
-          name: XtremeStreamer
+          name: XtremeStreamer_WiiU
           path: "*.wps"
