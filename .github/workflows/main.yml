@@ -1,39 +1,33 @@
 name: Compilar XtremeStreamer
 on: [push, workflow_dispatch]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     container: devkitpro/devkitppc:latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Obtener codigo
+        uses: actions/checkout@v4
       
-      - name: Extraer libwut, libwups y libnsysnet
+      - name: Instalar dependencias oficiales
         run: |
-          # 1. Descargar los paquetes que contienen los archivos .a
-          # Estos enlaces son directos de los desarrolladores de Wii U
-          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
-          wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-0.5.1-1-any.pkg.tar.xz
+          # Esto actualiza e instala todo sin usar wget
+          dkp-pacman -Sy
+          dkp-pacman -S wiiu-dev wiiu-wups --noconfirm
           
-          # 2. Extraer las librerías .a y los encabezados .h
-          # Esto es como "abrir" los archivos para sacar libwut.a, libwups.a, etc.
-          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C /
-          tar -xJf wups-0.5.1-1-any.pkg.tar.xz -C /
-          
-          # 3. Descargar la herramienta que crea el .wps (wups-tool)
-          wget https://github.com/wiiu-env/wups/releases/download/v0.5.1/wups-tool-linux.tar.gz
-          tar -xzf wups-tool-linux.tar.gz
-          cp wups-tool /opt/devkitpro/tools/bin/
-
       - name: Compilar Plugin
         run: |
-          export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
-          export WUT_ROOT=/opt/devkitpro/wut
+          # Configuramos las rutas del sistema
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITPPC=$DEVKITPRO/devkitPPC
+          export WUT_ROOT=$DEVKITPRO/wut
+          export PATH=$PATH:$DEVKITPPC/bin:$DEVKITPRO/tools/bin
           
-          # Compilar el código usando las librerías que acabamos de extraer
+          # Compilamos usando tu Makefile
           make
           
-      - name: Obtener Archivo .wps
+      - name: Guardar el archivo .wps
         uses: actions/upload-artifact@v4
         with:
-          name: Plugin_Listo_Para_SD
+          name: Plugin_Final_WiiU
           path: "*.wps"
