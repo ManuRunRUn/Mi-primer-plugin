@@ -3,17 +3,35 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Cambiamos a una imagen que ya tiene TODO pre-configurado
-    container: ghcr.io/wiiu-env/core-docker:master
+    container: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compilar Directamente
+      - name: Extraer Herramientas de Aroma
         run: |
-          # En este contenedor las rutas ya estan listas
-          # Solo ejecutamos el comando de compilacion
-          make
-      - name: Entrega de Plugin
+          # Descargamos el conversor wups-tool directamente desde el repositorio oficial de lanzamientos
+          wget https://github.com/wiiu-env/wups/releases/download/v0.5.0/wups-tool-linux.tar.gz
+          tar -xzf wups-tool-linux.tar.gz
+          chmod +x wups-tool
+          
+          # Descargamos las cabeceras necesarias (wut)
+          wget https://github.com/wiiu-env/wut/releases/download/v1.0.0-beta12/wut-1.0.0-1-any.pkg.tar.xz
+          mkdir -p wut_extra
+          tar -xJf wut-1.0.0-1-any.pkg.tar.xz -C wut_extra
+          # Las movemos a donde el compilador las vea
+          cp -r wut_extra/opt/devkitpro/wut /opt/devkitpro/
+
+      - name: Compilar XtremeStreamer
+        run: |
+          export PATH=$PATH:/opt/devkitpro/devkitPPC/bin:/opt/devkitpro/tools/bin
+          # Compilación directa ignorando el Makefile que daba errores
+          powerpc-eabi-gcc -O2 -mcpu=750 -meabi -mhard-float main.cpp -o plugin.elf \
+            -I/opt/devkitpro/wut/include -L/opt/devkitpro/wut/lib -lwut -lnsysnet
+          
+          # Convertir al formato final de Wii U
+          ./wups-tool plugin.elf XtremeStreamer.wps
+          
+      - name: Descargar Plugin
         uses: actions/upload-artifact@v4
         with:
-          name: Plugin_WiiU_Listo
+          name: XtremeStreamer_Final
           path: "*.wps"
